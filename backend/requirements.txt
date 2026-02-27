@@ -9,3 +9,4 @@ numpy
 requests
 django-cors-headers>=4.3.0
 requests>=2.31.0
+yfinance>=0.2.36
