@@ -18,5 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('commodities.urls')), # Conectando a nossa API!
+    path('api/', include('commodities.urls')), # Conectando a API de commodities
+    path('api/', include('climate.urls')), # Conectando a API de clima
 ]
