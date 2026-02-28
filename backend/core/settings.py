@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     # Nossos Apps
     'commodities',
+    'climate',
 ]
 
 MIDDLEWARE = [
