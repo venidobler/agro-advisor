@@ -2,9 +2,9 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
-// Importando o Highcharts
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
+import { DollarSign, Leaf, Wheat, TrendingUp, TrendingDown, Minus } from "lucide-react"
 
 function App() {
   const [quotes, setQuotes] = useState([])
@@ -16,12 +16,8 @@ function App() {
         fetch("http://localhost:8000/api/quotes/"),
         fetch("http://localhost:8000/api/weather/")
       ])
-      
-      const quotesData = await quotesRes.json()
-      const weatherData = await weatherRes.json()
-      
-      setQuotes(quotesData)
-      setWeather(weatherData)
+      setQuotes(await quotesRes.json())
+      setWeather(await weatherRes.json())
     } catch (error) {
       console.error("Erro ao sincronizar dados:", error)
     }
@@ -32,58 +28,86 @@ function App() {
   }, [])
 
   // ==========================================
-  // LÓGICA DO GRÁFICO (HIGHCHARTS) - SOJA E MILHO
+  // 1. LÓGICA DOS CARDS DE TOPO (KPIs com Tendência)
   // ==========================================
-  // 1. Filtra as cotações e inverte para ordem cronológica
+  const getKpiData = (commodityCode) => {
+    // Filtra o histórico da commodity específica
+    const history = quotes.filter(q => q.commodity === commodityCode);
+    
+    // Se não tem nada, retorna vazio
+    if (history.length === 0) return { current: '---', hasTrend: false };
+    
+    const currentPrice = parseFloat(history[0].price);
+    
+    // Se só tem 1 dia de dado, não tem como comparar com ontem
+    if (history.length < 2) return { current: currentPrice.toFixed(2), hasTrend: false };
+
+    const previousPrice = parseFloat(history[1].price);
+    const diffValue = currentPrice - previousPrice;
+    const diffPerc = (diffValue / previousPrice) * 100;
+
+    return {
+      current: currentPrice.toFixed(2),
+      diffValue: Math.abs(diffValue).toFixed(2),
+      diffPerc: Math.abs(diffPerc).toFixed(2),
+      isUp: diffValue > 0,
+      isDown: diffValue < 0,
+      isEqual: diffValue === 0,
+      hasTrend: true
+    };
+  };
+
+  const kpiUSD = getKpiData('USD');
+  const kpiSOY = getKpiData('SOY');
+  const kpiCRN = getKpiData('CRN');
+
+  // ==========================================
+  // 2. GRÁFICO DE MERCADO (SOJA E MILHO)
+  // ==========================================
   const soyQuotes = quotes.filter(q => q.commodity === 'SOY').reverse()
   const cornQuotes = quotes.filter(q => q.commodity === 'CRN').reverse()
   
-  // 2. Extrai as categorias (Eixo X). Usamos as datas da soja como base.
-  const chartCategories = soyQuotes.map(q => {
-    const [year, month, day] = q.date.split('-')
-    return `${day}/${month}`
-  })
-  
-  // Extrai os valores numéricos
+  const marketCategories = soyQuotes.map(q => q.date.split('-').reverse().slice(0, 2).join('/'))
   const soyData = soyQuotes.map(q => parseFloat(q.price))
   const cornData = cornQuotes.map(q => parseFloat(q.price))
 
-  // 3. Configuração do visual do Highcharts
-  const chartOptions = {
-    chart: {
-      type: 'spline',
-      style: { fontFamily: 'inherit' }
-    },
-    title: {
-      text: 'Evolução de Preços (R$/Saca)',
-      style: { fontSize: '16px', fontWeight: 'bold', color: '#334155' }
-    },
-    xAxis: {
-      categories: chartCategories,
-      crosshair: true
-    },
-    yAxis: {
-      title: { text: 'Valor (R$)' },
-      labels: { format: 'R$ {value}' }
-    },
-    tooltip: {
-      shared: true, // Mostra os dois valores na mesma caixinha ao passar o mouse!
-      valuePrefix: 'R$ ',
-      valueDecimals: 2
-    },
+  const marketChartOptions = {
+    chart: { type: 'spline', style: { fontFamily: 'inherit' }, height: 350 },
+    title: { text: 'Evolução de Preços (R$/Saca)', style: { fontSize: '16px', fontWeight: 'bold', color: '#334155' } },
+    xAxis: { categories: marketCategories, crosshair: true },
+    yAxis: { title: { text: 'Valor (R$)' }, labels: { format: 'R$ {value}' } },
+    tooltip: { shared: true, valuePrefix: 'R$ ', valueDecimals: 2 },
     series: [
-      {
-        name: 'Soja',
-        data: soyData,
-        color: '#15803d', // Verde
-        marker: { symbol: 'circle' }
-      },
-      {
-        name: 'Milho',
-        data: cornData,
-        color: '#eab308', // Amarelo/Dourado
-        marker: { symbol: 'square' }
-      }
+      { name: 'Soja', data: soyData, color: '#15803d', marker: { symbol: 'circle' } },
+      { name: 'Milho', data: cornData, color: '#eab308', marker: { symbol: 'square' } }
+    ],
+    credits: { enabled: false }
+  }
+
+  // ==========================================
+  // 3. GRÁFICO DE CLIMA (TEMPERATURA E CHUVA)
+  // ==========================================
+  const weatherCategories = weather.map(w => w.date.split('-').reverse().slice(0, 2).join('/'))
+  const maxTempData = weather.map(w => parseFloat(w.max_temp))
+  const minTempData = weather.map(w => parseFloat(w.min_temp))
+  const rainData = weather.map(w => parseFloat(w.precipitation))
+
+  const weatherChartOptions = {
+    chart: { style: { fontFamily: 'inherit' }, height: 350 },
+    title: { text: 'Previsão do Tempo (7 Dias)', style: { fontSize: '16px', fontWeight: 'bold', color: '#334155' } },
+    xAxis: { categories: weatherCategories, crosshair: true },
+    // EIXO Y DUPLO: Chuva de um lado, Temperatura do outro!
+    yAxis: [
+      { title: { text: 'Temperatura (°C)' }, labels: { format: '{value}°' } },
+      { title: { text: 'Chuva (mm)' }, labels: { format: '{value} mm' }, opposite: true }
+    ],
+    tooltip: { shared: true },
+    series: [
+      // Chuva como Colunas (Barras)
+      { name: 'Chuva', type: 'column', yAxis: 1, data: rainData, color: '#38bdf8', tooltip: { valueSuffix: ' mm' } },
+      // Temperaturas como Linhas
+      { name: 'Máx', type: 'spline', data: maxTempData, color: '#ef4444', tooltip: { valueSuffix: '°C' } },
+      { name: 'Mín', type: 'spline', data: minTempData, color: '#3b82f6', tooltip: { valueSuffix: '°C' } }
     ],
     credits: { enabled: false }
   }
@@ -92,11 +116,9 @@ function App() {
     <div className="min-h-screen bg-slate-50 p-8">
       
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-8 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto">
         <div>
-          <h1 className="text-4xl font-extrabold text-green-800 tracking-tight">
-            Agro Advisor
-          </h1>
+          <h1 className="text-4xl font-extrabold text-green-800 tracking-tight">Agro Advisor</h1>
           <p className="text-slate-500 mt-1">Painel de Inteligência de Mercado e Clima</p>
         </div>
         <Button onClick={fetchDashboardData} className="bg-green-700 hover:bg-green-800">
@@ -104,88 +126,136 @@ function App() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto mb-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Coluna 1: Cotações (Mantido igual) */}
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="bg-slate-100/50 pb-4">
-            <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
-              📊 Mercado (CBOT & Dólar)
-            </CardTitle>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-6 h-64 overflow-y-auto">
-            {quotes.length === 0 ? (
-              <p className="text-slate-400 text-center py-4">Aguardando dados do mercado...</p>
-            ) : (
-              <ul className="space-y-4">
-                {quotes.map((quote) => (
-                  <li key={quote.id} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                    <div>
-                      <span className="font-bold text-slate-700 block">{quote.commodity_display}</span>
-                      <span className="text-xs text-slate-400">{quote.date.split('-').reverse().join('/')} - {quote.location || "Base"}</span>
+        {/* LINHA 1: Cards de KPI (Estilo Dashboard Analítico Avançado) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          
+          {/* Card Dólar */}
+          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                
+                {/* Esquerda: Título, Preço e Tendência */}
+                <div className="flex flex-col">
+                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                    Dólar Comercial
+                  </p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-sky-500">R$</span>
+                    <h3 className="text-4xl font-black text-sky-500 tracking-tight">
+                      {kpiUSD.current}
+                    </h3>
+                  </div>
+                  {kpiUSD.hasTrend && (
+                    <div className={`mt-1 text-xs font-bold ${kpiUSD.isEqual ? 'text-slate-400' : kpiUSD.isUp ? 'text-sky-600' : 'text-rose-500'}`}>
+                      {kpiUSD.isUp ? '↑' : kpiUSD.isEqual ? '−' : '↓'} {kpiUSD.diffPerc}% ({kpiUSD.isUp ? '+' : kpiUSD.isEqual ? '' : '-'}R$ {kpiUSD.diffValue})
                     </div>
-                    <span className="text-lg font-black text-green-700">
-                      R$ {quote.price}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                  )}
+                </div>
 
-        {/* Coluna 2: Clima (Mantido igual) */}
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="bg-slate-100/50 pb-4">
-            <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
-              🌦️ Previsão do Tempo (Toledo-PR)
-            </CardTitle>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-6 h-64 overflow-y-auto">
-            {weather.length === 0 ? (
-              <p className="text-slate-400 text-center py-4">Aguardando radar meteorológico...</p>
-            ) : (
-              <ul className="space-y-3">
-                {weather.slice(0, 5).map((day) => {
-                  const dataFormatada = day.date.split('-').reverse().slice(0, 2).join('/');
-                  return (
-                    <li key={day.id} className="flex justify-between items-center p-2 border-b border-slate-100 last:border-0">
-                      <span className="font-semibold text-slate-600 w-16">{dataFormatada}</span>
-                      <div className="flex gap-4 text-sm font-medium">
-                        <span className="text-blue-500 w-12 text-right">{day.min_temp}°</span>
-                        <span className="text-red-500 w-12 text-right">{day.max_temp}°</span>
-                      </div>
-                      <span className="font-bold text-sky-700 bg-sky-50 px-3 py-1 rounded-full text-sm">
-                        {day.precipitation} mm
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                {/* Direita: Ícone */}
+                <div className="w-14 h-14 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
+                  <DollarSign className="w-6 h-6 text-sky-500" />
+                </div>
 
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card Soja */}
+          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                
+                <div className="flex flex-col">
+                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                    Soja (Saca 60kg)
+                  </p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-emerald-500">R$</span>
+                    <h3 className="text-4xl font-black text-emerald-500 tracking-tight">
+                      {kpiSOY.current}
+                    </h3>
+                  </div>
+                  {kpiSOY.hasTrend && (
+                    <div className={`mt-1 text-xs font-bold ${kpiSOY.isEqual ? 'text-slate-400' : kpiSOY.isUp ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      {kpiSOY.isUp ? '↑' : kpiSOY.isEqual ? '−' : '↓'} {kpiSOY.diffPerc}% ({kpiSOY.isUp ? '+' : kpiSOY.isEqual ? '' : '-'}R$ {kpiSOY.diffValue})
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                  <Leaf className="w-6 h-6 text-emerald-500" />
+                </div>
+
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card Milho */}
+          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                
+                <div className="flex flex-col">
+                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                    Milho (Saca 60kg)
+                  </p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-amber-500">R$</span>
+                    <h3 className="text-4xl font-black text-amber-500 tracking-tight">
+                      {kpiCRN.current}
+                    </h3>
+                  </div>
+                  {kpiCRN.hasTrend && (
+                    <div className={`mt-1 text-xs font-bold ${kpiCRN.isEqual ? 'text-slate-400' : kpiCRN.isUp ? 'text-amber-600' : 'text-rose-500'}`}>
+                      {kpiCRN.isUp ? '↑' : kpiCRN.isEqual ? '−' : '↓'} {kpiCRN.diffPerc}% ({kpiCRN.isUp ? '+' : kpiCRN.isEqual ? '' : '-'}R$ {kpiCRN.diffValue})
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                  <Wheat className="w-6 h-6 text-amber-500" />
+                </div>
+
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* LINHA 2: Gráficos (2 Colunas) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Gráfico de Mercado */}
+          <Card className="shadow-sm border-slate-200">
+            <CardContent className="p-6">
+              {soyQuotes.length > 0 ? (
+                <HighchartsReact highcharts={Highcharts} options={marketChartOptions} />
+              ) : (
+                <div className="h-[350px] flex items-center justify-center text-slate-400">
+                  Aguardando dados históricos...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de Clima */}
+          <Card className="shadow-sm border-slate-200">
+            <CardContent className="p-6">
+              {weather.length > 0 ? (
+                <HighchartsReact highcharts={Highcharts} options={weatherChartOptions} />
+              ) : (
+                <div className="h-[350px] flex items-center justify-center text-slate-400">
+                  Aguardando radar meteorológico...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+        </div>
       </div>
-
-      {/* NOVO: Linha do Gráfico Ocupando a Largura Total */}
-      <div className="max-w-6xl mx-auto">
-        <Card className="shadow-sm border-slate-200">
-          <CardContent className="p-6">
-            {soyQuotes.length > 0 ? (
-              <HighchartsReact
-                highcharts={Highcharts}
-                options={chartOptions}
-              />
-            ) : (
-              <p className="text-slate-400 text-center py-10">Não há histórico de Soja suficiente para gerar o gráfico.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
     </div>
   )
 }
