@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import { DollarSign, Leaf, Wheat, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { SidebarProvider, SidebarTrigger, SidebarInset  } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
 
 function App() {
   const [quotes, setQuotes] = useState([])
@@ -33,12 +35,12 @@ function App() {
   const getKpiData = (commodityCode) => {
     // Filtra o histórico da commodity específica
     const history = quotes.filter(q => q.commodity === commodityCode);
-    
+
     // Se não tem nada, retorna vazio
     if (history.length === 0) return { current: '---', hasTrend: false };
-    
+
     const currentPrice = parseFloat(history[0].price);
-    
+
     // Se só tem 1 dia de dado, não tem como comparar com ontem
     if (history.length < 2) return { current: currentPrice.toFixed(2), hasTrend: false };
 
@@ -66,7 +68,7 @@ function App() {
   // ==========================================
   const soyQuotes = quotes.filter(q => q.commodity === 'SOY').reverse()
   const cornQuotes = quotes.filter(q => q.commodity === 'CRN').reverse()
-  
+
   const marketCategories = soyQuotes.map(q => q.date.split('-').reverse().slice(0, 2).join('/'))
   const soyData = soyQuotes.map(q => parseFloat(q.price))
   const cornData = cornQuotes.map(q => parseFloat(q.price))
@@ -113,150 +115,174 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      
-      {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-4xl font-extrabold text-green-800 tracking-tight">Agro Advisor</h1>
-          <p className="text-slate-500 mt-1">Painel de Inteligência de Mercado e Clima</p>
-        </div>
-        <Button onClick={fetchDashboardData} className="bg-green-700 hover:bg-green-800">
-          Sincronizar Dados
-        </Button>
-      </div>
+    <SidebarProvider>
+      <AppSidebar />
 
-      <div className="max-w-7xl mx-auto space-y-6">
+      {/* O SidebarInset animado cuida do resto! */}
+      <SidebarInset className="bg-slate-50 min-h-screen">
         
-        {/* LINHA 1: Cards de KPI (Estilo Dashboard Analítico Avançado) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* CABEÇALHO GRUDADO (100% RELATIVO E SEGURO) */}
+        <header className="sticky top-0 flex h-16 w-[calc(100%)] items-center shrink-0 border-b bg-slate-50 shadow-sm z-50 px-4 md:px-6">
           
-          {/* Card Dólar */}
-          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                
-                {/* Esquerda: Título, Preço e Tendência */}
-                <div className="flex flex-col">
-                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
-                    Dólar Comercial
-                  </p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-sky-500">R$</span>
-                    <h3 className="text-4xl font-black text-sky-500 tracking-tight">
-                      {kpiUSD.current}
-                    </h3>
-                  </div>
-                  {kpiUSD.hasTrend && (
-                    <div className={`mt-1 text-xs font-bold ${kpiUSD.isEqual ? 'text-slate-400' : kpiUSD.isUp ? 'text-sky-600' : 'text-rose-500'}`}>
-                      {kpiUSD.isUp ? '↑' : kpiUSD.isEqual ? '−' : '↓'} {kpiUSD.diffPerc}% ({kpiUSD.isUp ? '+' : kpiUSD.isEqual ? '' : '-'}R$ {kpiUSD.diffValue})
+          <div className="flex h-full items-center">
+            {/* Esse botão fica rigidamente fixo aqui à esquerda acompanhando o Inset */}
+            <SidebarTrigger className="-ml-1 text-slate-500 hover:text-slate-800 transition-colors bg-white hover:bg-slate-100 rounded-lg" />
+            
+            <div className="hidden md:flex flex-col ml-4 pl-4 border-l border-slate-200">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">Visão da Praça</span>
+               <span className="text-sm font-semibold text-slate-700 leading-none mt-1">Toledo, PR</span>
+            </div>
+          </div>
+          
+          {/* A div flex-1 empurra o botão Sincronizar totalmente para o canto direito livre */}
+          <div className="flex-1" />
+
+          <Button onClick={fetchDashboardData} className="bg-green-700 hover:bg-green-800 shadow-sm rounded-md px-4 ml-4">
+            Sincronizar Dados
+          </Button>
+
+        </header>
+
+        {/* ÁREA DO DASHBOARD (Centralizada com limite máximo de largura) */}
+        <div className="p-6 md:p-8 w-full max-w-7xl mx-auto space-y-6">
+
+          {/* TÍTULO DO DASHBOARD */}
+          <div className="mb-6">
+            <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Visão Geral</h1>
+            <p className="text-slate-500 mt-1">Inteligência de Mercado e Clima para Toledo-PR</p>
+          </div>
+
+          {/* LINHA 1: Cards de KPI (Estilo Dashboard Analítico Avançado) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+
+            {/* Card Dólar */}
+            <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center">
+
+                  {/* Esquerda: Título, Preço e Tendência */}
+                  <div className="flex flex-col">
+                    <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                      Dólar Comercial
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-sky-500">R$</span>
+                      <h3 className="text-4xl font-black text-sky-500 tracking-tight">
+                        {kpiUSD.current}
+                      </h3>
                     </div>
-                  )}
-                </div>
-
-                {/* Direita: Ícone */}
-                <div className="w-14 h-14 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
-                  <DollarSign className="w-6 h-6 text-sky-500" />
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card Soja */}
-          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                
-                <div className="flex flex-col">
-                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
-                    Soja (Saca 60kg)
-                  </p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-emerald-500">R$</span>
-                    <h3 className="text-4xl font-black text-emerald-500 tracking-tight">
-                      {kpiSOY.current}
-                    </h3>
+                    {kpiUSD.hasTrend && (
+                      <div className={`mt-1 text-xs font-bold ${kpiUSD.isEqual ? 'text-slate-400' : kpiUSD.isUp ? 'text-sky-600' : 'text-rose-500'}`}>
+                        {kpiUSD.isUp ? '↑' : kpiUSD.isEqual ? '−' : '↓'} {kpiUSD.diffPerc}% ({kpiUSD.isUp ? '+' : kpiUSD.isEqual ? '' : '-'}R$ {kpiUSD.diffValue})
+                      </div>
+                    )}
                   </div>
-                  {kpiSOY.hasTrend && (
-                    <div className={`mt-1 text-xs font-bold ${kpiSOY.isEqual ? 'text-slate-400' : kpiSOY.isUp ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {kpiSOY.isUp ? '↑' : kpiSOY.isEqual ? '−' : '↓'} {kpiSOY.diffPerc}% ({kpiSOY.isUp ? '+' : kpiSOY.isEqual ? '' : '-'}R$ {kpiSOY.diffValue})
-                    </div>
-                  )}
-                </div>
 
-                <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <Leaf className="w-6 h-6 text-emerald-500" />
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card Milho */}
-          <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                
-                <div className="flex flex-col">
-                  <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
-                    Milho (Saca 60kg)
-                  </p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-amber-500">R$</span>
-                    <h3 className="text-4xl font-black text-amber-500 tracking-tight">
-                      {kpiCRN.current}
-                    </h3>
+                  {/* Direita: Ícone */}
+                  <div className="w-14 h-14 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-6 h-6 text-sky-500" />
                   </div>
-                  {kpiCRN.hasTrend && (
-                    <div className={`mt-1 text-xs font-bold ${kpiCRN.isEqual ? 'text-slate-400' : kpiCRN.isUp ? 'text-amber-600' : 'text-rose-500'}`}>
-                      {kpiCRN.isUp ? '↑' : kpiCRN.isEqual ? '−' : '↓'} {kpiCRN.diffPerc}% ({kpiCRN.isUp ? '+' : kpiCRN.isEqual ? '' : '-'}R$ {kpiCRN.diffValue})
+
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card Soja */}
+            <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center">
+
+                  <div className="flex flex-col">
+                    <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                      Soja (Saca 60kg)
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-emerald-500">R$</span>
+                      <h3 className="text-4xl font-black text-emerald-500 tracking-tight">
+                        {kpiSOY.current}
+                      </h3>
                     </div>
-                  )}
+                    {kpiSOY.hasTrend && (
+                      <div className={`mt-1 text-xs font-bold ${kpiSOY.isEqual ? 'text-slate-400' : kpiSOY.isUp ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {kpiSOY.isUp ? '↑' : kpiSOY.isEqual ? '−' : '↓'} {kpiSOY.diffPerc}% ({kpiSOY.isUp ? '+' : kpiSOY.isEqual ? '' : '-'}R$ {kpiSOY.diffValue})
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                    <Leaf className="w-6 h-6 text-emerald-500" />
+                  </div>
+
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                  <Wheat className="w-6 h-6 text-amber-500" />
+            {/* Card Milho */}
+            <Card className="border-slate-200 shadow-sm bg-white hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center">
+
+                  <div className="flex flex-col">
+                    <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">
+                      Milho (Saca 60kg)
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-amber-500">R$</span>
+                      <h3 className="text-4xl font-black text-amber-500 tracking-tight">
+                        {kpiCRN.current}
+                      </h3>
+                    </div>
+                    {kpiCRN.hasTrend && (
+                      <div className={`mt-1 text-xs font-bold ${kpiCRN.isEqual ? 'text-slate-400' : kpiCRN.isUp ? 'text-amber-600' : 'text-rose-500'}`}>
+                        {kpiCRN.isUp ? '↑' : kpiCRN.isEqual ? '−' : '↓'} {kpiCRN.diffPerc}% ({kpiCRN.isUp ? '+' : kpiCRN.isEqual ? '' : '-'}R$ {kpiCRN.diffValue})
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                    <Wheat className="w-6 h-6 text-amber-500" />
+                  </div>
+
                 </div>
+              </CardContent>
+            </Card>
 
-              </div>
-            </CardContent>
-          </Card>
+          </div>
 
+          {/* LINHA 2: Gráficos (2 Colunas) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Gráfico de Mercado */}
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="p-6">
+                {soyQuotes.length > 0 ? (
+                  <HighchartsReact highcharts={Highcharts} options={marketChartOptions} />
+                ) : (
+                  <div className="h-[350px] flex items-center justify-center text-slate-400">
+                    Aguardando dados históricos...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gráfico de Clima */}
+            <Card className="shadow-sm border-slate-200">
+              <CardContent className="p-6">
+                {weather.length > 0 ? (
+                  <HighchartsReact highcharts={Highcharts} options={weatherChartOptions} />
+                ) : (
+                  <div className="h-[350px] flex items-center justify-center text-slate-400">
+                    Aguardando radar meteorológico...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* LINHA 2: Gráficos (2 Colunas) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Gráfico de Mercado */}
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="p-6">
-              {soyQuotes.length > 0 ? (
-                <HighchartsReact highcharts={Highcharts} options={marketChartOptions} />
-              ) : (
-                <div className="h-[350px] flex items-center justify-center text-slate-400">
-                  Aguardando dados históricos...
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Gráfico de Clima */}
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="p-6">
-              {weather.length > 0 ? (
-                <HighchartsReact highcharts={Highcharts} options={weatherChartOptions} />
-              ) : (
-                <div className="h-[350px] flex items-center justify-center text-slate-400">
-                  Aguardando radar meteorológico...
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-        </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 
