@@ -8,6 +8,8 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { useTheme } from "next-themes"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import Lavouras from "./pages/Lavouras"
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
@@ -29,7 +31,7 @@ export function ModeToggle() {
 function DashboardContent() {
   const [quotes, setQuotes] = useState([])
   const [weather, setWeather] = useState([])
-  
+
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
 
@@ -147,103 +149,111 @@ function DashboardContent() {
           </div>
         </header>
 
-        <div className="p-6 md:p-8 w-full max-w-7xl mx-auto space-y-6">
-          <div className="mb-6">
-            <h1 className="text-4xl font-extrabold text-zinc-800 dark:text-zinc-100 tracking-tight transition-colors">Visão Geral</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1 transition-colors">Inteligência de Mercado e Clima para Toledo-PR</p>
-          </div>
+        {/* AQUI ENTRA O ROTEADOR! */}
+        <Routes>
+          {/* ROTA 1: Visão Geral (O seu dashboard atual inteiro fica aqui dentro) */}
+          <Route path="/" element={
+            <div className="p-6 md:p-8 w-full max-w-7xl mx-auto space-y-6">
+              <div className="mb-6">
+                <h1 className="text-4xl font-extrabold text-zinc-800 dark:text-zinc-100 tracking-tight transition-colors">Visão Geral</h1>
+                <p className="text-zinc-500 dark:text-zinc-400 mt-1 transition-colors">Inteligência de Mercado e Clima para Toledo-PR</p>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* CARDS COM BORDAS MAIS SUAVES NO DARK MODE (zinc-800/50) */}
-            <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Dólar Comercial</p>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-blue-500 dark:text-blue-400">R$</span>
-                      <h3 className="text-4xl font-black text-blue-500 dark:text-blue-400 tracking-tight">{kpiUSD.current}</h3>
-                    </div>
-                    {kpiUSD.hasTrend && (
-                      <div className={`mt-1 text-xs font-bold ${kpiUSD.isEqual ? 'text-zinc-400' : kpiUSD.isUp ? 'text-blue-600 dark:text-blue-400' : 'text-rose-500'}`}>
-                        {kpiUSD.isUp ? '↑' : kpiUSD.isEqual ? '−' : '↓'} {kpiUSD.diffPerc}% ({kpiUSD.isUp ? '+' : kpiUSD.isEqual ? '' : '-'}R$ {kpiUSD.diffValue})
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* CARDS COM BORDAS MAIS SUAVES NO DARK MODE (zinc-800/50) */}
+                <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Dólar Comercial</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-bold text-blue-500 dark:text-blue-400">R$</span>
+                          <h3 className="text-4xl font-black text-blue-500 dark:text-blue-400 tracking-tight">{kpiUSD.current}</h3>
+                        </div>
+                        {kpiUSD.hasTrend && (
+                          <div className={`mt-1 text-xs font-bold ${kpiUSD.isEqual ? 'text-zinc-400' : kpiUSD.isUp ? 'text-blue-600 dark:text-blue-400' : 'text-rose-500'}`}>
+                            {kpiUSD.isUp ? '↑' : kpiUSD.isEqual ? '−' : '↓'} {kpiUSD.diffPerc}% ({kpiUSD.isUp ? '+' : kpiUSD.isEqual ? '' : '-'}R$ {kpiUSD.diffValue})
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center shrink-0">
-                    <DollarSign className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Soja (Saca 60kg)</p>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-emerald-500 dark:text-emerald-400">R$</span>
-                      <h3 className="text-4xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight">{kpiSOY.current}</h3>
-                    </div>
-                    {kpiSOY.hasTrend && (
-                      <div className={`mt-1 text-xs font-bold ${kpiSOY.isEqual ? 'text-zinc-400' : kpiSOY.isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
-                        {kpiSOY.isUp ? '↑' : kpiSOY.isEqual ? '−' : '↓'} {kpiSOY.diffPerc}% ({kpiSOY.isUp ? '+' : kpiSOY.isEqual ? '' : '-'}R$ {kpiSOY.diffValue})
+                      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center shrink-0">
+                        <DollarSign className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                       </div>
-                    )}
-                  </div>
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center shrink-0">
-                    <Leaf className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Milho (Saca 60kg)</p>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-amber-500 dark:text-amber-400">R$</span>
-                      <h3 className="text-4xl font-black text-amber-500 dark:text-amber-400 tracking-tight">{kpiCRN.current}</h3>
                     </div>
-                    {kpiCRN.hasTrend && (
-                      <div className={`mt-1 text-xs font-bold ${kpiCRN.isEqual ? 'text-zinc-400' : kpiCRN.isUp ? 'text-amber-600 dark:text-amber-400' : 'text-rose-500'}`}>
-                        {kpiCRN.isUp ? '↑' : kpiCRN.isEqual ? '−' : '↓'} {kpiCRN.diffPerc}% ({kpiCRN.isUp ? '+' : kpiCRN.isEqual ? '' : '-'}R$ {kpiCRN.diffValue})
+                  </CardContent>
+                </Card>
+
+                <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Soja (Saca 60kg)</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-bold text-emerald-500 dark:text-emerald-400">R$</span>
+                          <h3 className="text-4xl font-black text-emerald-500 dark:text-emerald-400 tracking-tight">{kpiSOY.current}</h3>
+                        </div>
+                        {kpiSOY.hasTrend && (
+                          <div className={`mt-1 text-xs font-bold ${kpiSOY.isEqual ? 'text-zinc-400' : kpiSOY.isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                            {kpiSOY.isUp ? '↑' : kpiSOY.isEqual ? '−' : '↓'} {kpiSOY.diffPerc}% ({kpiSOY.isUp ? '+' : kpiSOY.isEqual ? '' : '-'}R$ {kpiSOY.diffValue})
+                          </div>
+                        )}
                       </div>
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center shrink-0">
+                        <Leaf className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-zinc-200 dark:border-zinc-800/50 shadow-sm bg-white dark:bg-zinc-900 hover:shadow-md transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <p className="text-[11px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Milho (Saca 60kg)</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-bold text-amber-500 dark:text-amber-400">R$</span>
+                          <h3 className="text-4xl font-black text-amber-500 dark:text-amber-400 tracking-tight">{kpiCRN.current}</h3>
+                        </div>
+                        {kpiCRN.hasTrend && (
+                          <div className={`mt-1 text-xs font-bold ${kpiCRN.isEqual ? 'text-zinc-400' : kpiCRN.isUp ? 'text-amber-600 dark:text-amber-400' : 'text-rose-500'}`}>
+                            {kpiCRN.isUp ? '↑' : kpiCRN.isEqual ? '−' : '↓'} {kpiCRN.diffPerc}% ({kpiCRN.isUp ? '+' : kpiCRN.isEqual ? '' : '-'}R$ {kpiCRN.diffValue})
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 flex items-center justify-center shrink-0">
+                        <Wheat className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="shadow-sm border-zinc-200 dark:border-zinc-800/50 dark:bg-zinc-900 transition-colors">
+                  <CardContent className="p-6">
+                    {soyQuotes.length > 0 ? (
+                      <HighchartsReact highcharts={Highcharts} options={marketChartOptions} />
+                    ) : (
+                      <div className="h-[350px] flex items-center justify-center text-zinc-400 dark:text-zinc-500">Aguardando dados...</div>
                     )}
-                  </div>
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 flex items-center justify-center shrink-0">
-                    <Wheat className="w-6 h-6 text-amber-500 dark:text-amber-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-sm border-zinc-200 dark:border-zinc-800/50 dark:bg-zinc-900 transition-colors">
-              <CardContent className="p-6">
-                {soyQuotes.length > 0 ? (
-                  <HighchartsReact highcharts={Highcharts} options={marketChartOptions} />
-                ) : (
-                  <div className="h-[350px] flex items-center justify-center text-zinc-400 dark:text-zinc-500">Aguardando dados...</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-zinc-200 dark:border-zinc-800/50 dark:bg-zinc-900 transition-colors">
-              <CardContent className="p-6">
-                {weather.length > 0 ? (
-                  <HighchartsReact highcharts={Highcharts} options={weatherChartOptions} />
-                ) : (
-                  <div className="h-[350px] flex items-center justify-center text-zinc-400 dark:text-zinc-500">Aguardando radar...</div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                <Card className="shadow-sm border-zinc-200 dark:border-zinc-800/50 dark:bg-zinc-900 transition-colors">
+                  <CardContent className="p-6">
+                    {weather.length > 0 ? (
+                      <HighchartsReact highcharts={Highcharts} options={weatherChartOptions} />
+                    ) : (
+                      <div className="h-[350px] flex items-center justify-center text-zinc-400 dark:text-zinc-500">Aguardando radar...</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          } />
+          {/* ROTA 2: A página nova de Lavouras! */}
+          <Route path="/lavouras" element={<Lavouras />} />
+        </Routes>
       </SidebarInset>
     </SidebarProvider>
   )
@@ -252,7 +262,9 @@ function DashboardContent() {
 export default function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme" attribute="class">
-      <DashboardContent />
+      <Router>
+        <DashboardContent />
+      </Router>
     </ThemeProvider>
   )
 }
