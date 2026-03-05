@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Farm, CropField
+from .models import Farm, CropField, AgriculturalInput
 
 class FarmSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,4 +15,14 @@ class CropFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CropField
+        fields = '__all__'
+
+class AgriculturalInputSerializer(serializers.ModelSerializer):
+    # Aplicando o mesmo truque para o módulo de Insumos!
+    farm_name = serializers.CharField(source='farm.name', read_only=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    unit_display = serializers.CharField(source='get_unit_display', read_only=True)
+
+    class Meta:
+        model = AgriculturalInput
         fields = '__all__'
