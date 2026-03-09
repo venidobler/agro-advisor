@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/', include('commodities.urls')), # Conectando a API de commodities
     path('api/', include('climate.urls')), # Conectando a API de clima
     path('api/management/', include('farms.urls')), # Conectando a API de gestão de fazendas
+    path('api/market/', include('market.urls')), # Conectando a API de mercado
 ]
