@@ -15,13 +15,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { LayoutDashboard, CloudSun, Tractor, LineChart, Settings, Sprout } from "lucide-react"
-import { Link, useLocation } from "react-router-dom" // <-- Importamos o roteador aqui!
+import { LayoutDashboard, CloudSun, Tractor, LineChart, Settings, Sprout, Package } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
 
-// Ajustamos as URLs para os caminhos reais
 const items = [
   { title: "Visão Geral", url: "/", icon: LayoutDashboard },
   { title: "Mercado Físico", url: "/mercado", icon: LineChart },
+  { title: "Insumos", url: "/insumos", icon: Package },
   { title: "Radar & Clima", url: "/clima", icon: CloudSun },
   { title: "Minhas Lavouras", url: "/lavouras", icon: Tractor },
   { title: "Ajustes", url: "/ajustes", icon: Settings },
@@ -61,15 +61,13 @@ export function AppSidebar() {
                     <SidebarMenuItem key={item.title}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <SidebarMenuButton 
-                             asChild 
-                             className={`mt-1 justify-start overflow-hidden transition-colors ${
-                               isActive 
-                                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-semibold" 
-                                : "text-zinc-600 dark:text-zinc-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-400"
-                             }`}
+                          <SidebarMenuButton
+                            asChild
+                            className={`mt-1 justify-start overflow-hidden transition-colors ${isActive
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-semibold"
+                              : "text-zinc-600 dark:text-zinc-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 dark:hover:text-emerald-400"
+                              }`}
                           >
-                            {/* Trocamos a tag <a> por <Link to={...}> */}
                             <Link to={item.url} className="flex items-center gap-2">
                               <item.icon className="w-5 h-5 shrink-0" />
                               <span className="whitespace-nowrap truncate">{item.title}</span>
