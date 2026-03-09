@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'commodities',
     'climate',
     'farms',
+    'market',
 ]
 
 MIDDLEWARE = [
