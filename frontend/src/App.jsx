@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 // Importando as nossas Páginas Separadas!
 import Dashboard from "./pages/Dashboard"
 import Lavouras from "./pages/Lavouras"
+import Insumos from "./pages/Insumos"
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
@@ -55,6 +56,7 @@ function MainLayout() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/lavouras" element={<Lavouras />} />
+          <Route path="/insumos" element={<Insumos />} />
         </Routes>
 
       </SidebarInset>
