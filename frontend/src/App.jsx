@@ -10,6 +10,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Dashboard from "./pages/Dashboard"
 import Lavouras from "./pages/Lavouras"
 import Insumos from "./pages/Insumos"
+import Mercado from "./pages/Mercado"
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
@@ -57,6 +58,7 @@ function MainLayout() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/lavouras" element={<Lavouras />} />
           <Route path="/insumos" element={<Insumos />} />
+          <Route path="/mercado" element={<Mercado />} />
         </Routes>
 
       </SidebarInset>
