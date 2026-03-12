@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MarketPrice
+from .models import MarketPrice, PortPremium
 
 class MarketPriceSerializer(serializers.ModelSerializer):
     # Traduz 'SOY' para 'Soja' para o React
@@ -7,4 +7,9 @@ class MarketPriceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MarketPrice
+        fields = '__all__'
+
+class PortPremiumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PortPremium
         fields = '__all__'
